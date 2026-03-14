@@ -13,97 +13,101 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -------------------------------------------------
-      # Checkout repository
-      # -------------------------------------------------
+      # -----------------------------
+      # Checkout repo
+      # -----------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -------------------------------------------------
+      # -----------------------------
       # Install tools
-      # -------------------------------------------------
+      # -----------------------------
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq zip rsync openssl
           npm install -g crx3
 
-      # -------------------------------------------------
-      # Read extension version
-      # -------------------------------------------------
-      - name: Read version from manifest
-        id: manifest
+      # -----------------------------
+      # Read version
+      # -----------------------------
+      - name: Read version
+        id: version
         run: |
           VERSION=$(jq -r .version manifest.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # =================================================
-      # CHROME / EDGE BUILD
-      # =================================================
+      # =====================================================
+      # BUILD EXTENSION (shared build)
+      # =====================================================
 
-      - name: Prepare Chrome build
+      - name: Prepare build folder
         run: |
-          mkdir build-chrome
+          mkdir build
+          cp manifest.json build/
 
-          cp manifest.json build-chrome/
+          rsync -av icons build/
+          rsync -av src build/
+          rsync -av dist build/
 
-          rsync -av icons build-chrome/
-          rsync -av src build-chrome/
-          rsync -av dist build-chrome/
+      # =====================================================
+      # CHROME
+      # =====================================================
 
-      - name: Generate CRX signing key
+      - name: Generate CRX key
         run: |
           openssl genrsa -out key.pem 2048
 
       - name: Build Chrome CRX
         run: |
-          crx3 package build-chrome --key key.pem --out extension-chrome.crx
+          crx3 package build --key key.pem --out extension-chrome.crx
 
-      - name: Build Edge CRX
+      # =====================================================
+      # EDGE
+      # =====================================================
+
+      - name: Build Edge ZIP
         run: |
-          cp extension-chrome.crx extension-edge.crx
+          cd build
+          zip -r ../extension-edge.zip .
 
-      # =================================================
-      # FIREFOX BUILD
-      # =================================================
+      # =====================================================
+      # FIREFOX
+      # =====================================================
 
       - name: Prepare Firefox build
         run: |
-          mkdir build-firefox
+          mkdir firefox
+          cp manifest_firefox.json firefox/manifest.json
 
-          cp manifest_firefox.json build-firefox/manifest.json
-
-          rsync -av icons build-firefox/
-          rsync -av src build-firefox/
-          rsync -av dist build-firefox/
+          rsync -av icons firefox/
+          rsync -av src firefox/
+          rsync -av dist firefox/
 
       - name: Build Firefox XPI
         run: |
-          cd build-firefox
+          cd firefox
           zip -r ../extension-firefox.xpi .
 
-      # =================================================
+      # =====================================================
       # SOURCE ZIP
-      # =================================================
+      # =====================================================
 
       - name: Build source archive
         run: |
           zip -r extension-source.zip . \
-            -x "*.git*" \
-               "*.github*" \
-               "node_modules/*" \
-               "build-*"
+            -x "*.git*" "*.github*" "node_modules/*" "build*" "firefox"
 
-      # =================================================
-      # CREATE GITHUB RELEASE
-      # =================================================
+      # =====================================================
+      # GITHUB RELEASE
+      # =====================================================
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.manifest.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
           files: |
             extension-chrome.crx
-            extension-edge.crx
+            extension-edge.zip
             extension-firefox.xpi
             extension-source.zip
