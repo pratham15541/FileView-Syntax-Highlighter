@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,50 +20,45 @@ jobs:
         uses: actions/checkout@v4
 
       # -------------------------
-      # Install tools
+      # Install dependencies
       # -------------------------
-      - name: Install dependencies
+      - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq zip rsync
+          sudo apt-get install -y jq zip rsync openssl
           npm install -g crx3
 
       # -------------------------
-      # Read version from manifest
+      # Read version
       # -------------------------
-      - name: Read version from manifest
-        id: manifest
+      - name: Read version
+        id: version
         run: |
           VERSION=$(jq -r .version manifest.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # -------------------------
-      # Debug structure (helps if CI fails)
-      # -------------------------
-      - name: Debug repository
-        run: |
-          echo "Repository structure:"
-          ls -la
-
       # =====================================================
-      # CHROME / EDGE BUILD
+      # CHROME BUILD
       # =====================================================
 
       - name: Prepare Chrome build
         run: |
-          mkdir chrome-build
-          rsync -av \
-            --exclude='.git*' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='*.zip' \
-            --exclude='*.crx' \
-            ./ chrome-build/
+          mkdir build-chrome
+
+          cp manifest.json build-chrome/
+
+          rsync -av icons build-chrome/
+          rsync -av src build-chrome/
+          rsync -av vendor build-chrome/
+
+      # Generate key automatically
+      - name: Generate CRX key
+        run: |
+          openssl genrsa -out key.pem 2048
 
       - name: Build Chrome CRX
         run: |
-          echo "${{ secrets.CHROME_EXTENSION_KEY }}" > key.pem
-          crx3 package chrome-build --key key.pem --out extension-chrome.crx
+          crx3 package build-chrome --key key.pem --out extension-chrome.crx
 
       - name: Build Edge CRX
         run: |
@@ -72,40 +70,36 @@ jobs:
 
       - name: Prepare Firefox build
         run: |
-          mkdir firefox-build
-          rsync -av \
-            --exclude='.git*' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='*.zip' \
-            --exclude='*.crx' \
-            ./ firefox-build/
+          mkdir build-firefox
 
-          # Replace manifest
-          cp manifest_firefox.json firefox-build/manifest.json
+          cp manifest_firefox.json build-firefox/manifest.json
+
+          rsync -av icons build-firefox/
+          rsync -av src build-firefox/
+          rsync -av vendor build-firefox/
 
       - name: Build Firefox XPI
         run: |
-          cd firefox-build
+          cd build-firefox
           zip -r ../extension-firefox.xpi .
 
       # =====================================================
       # SOURCE ZIP
       # =====================================================
 
-      - name: Build source zip
+      - name: Build source archive
         run: |
           zip -r extension-source.zip . \
-            -x "*.git*" "*.github*" "node_modules/*" "*.crx" "*.xpi"
+            -x "*.git*" "*.github*" "node_modules/*"
 
       # =====================================================
-      # GITHUB RELEASE
+      # RELEASE
       # =====================================================
 
-      - name: Upload release assets
+      - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.manifest.outputs.version }}
+          tag_name: v${{ steps.version.outputs.version }}
           files: |
             extension-chrome.crx
             extension-edge.crx
