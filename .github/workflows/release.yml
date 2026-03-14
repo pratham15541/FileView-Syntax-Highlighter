@@ -1,113 +1,106 @@
 name: Build Extension
 
 on:
-  push:
-    tags:
-      - "v*"
+    push:
+        tags:
+            - "v*"
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    steps:
-      # -----------------------------
-      # Checkout repo
-      # -----------------------------
-      - name: Checkout
-        uses: actions/checkout@v4
+        steps:
+            # -----------------------------
+            # Checkout repo
+            # -----------------------------
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      # -----------------------------
-      # Install tools
-      # -----------------------------
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq zip rsync openssl
-          npm install -g crx3
+            # -----------------------------
+            # Install tools
+            # -----------------------------
+            - name: Install dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y jq zip rsync openssl
+                  npm install -g crx3
 
-      # -----------------------------
-      # Read version
-      # -----------------------------
-      - name: Read version
-        id: version
-        run: |
-          VERSION=$(jq -r .version manifest.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+            # -----------------------------
+            # Read version
+            # -----------------------------
+            - name: Read version
+              id: version
+              run: |
+                  VERSION=$(jq -r .version manifest.json)
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # =====================================================
-      # BUILD EXTENSION (shared build)
-      # =====================================================
+            # =====================================================
+            # BUILD EXTENSION (shared build)
+            # =====================================================
 
-      - name: Prepare build folder
-        run: |
-          mkdir build
-          cp manifest.json build/
+            - name: Prepare build folder
+              run: |
+                  mkdir build
+                  cp manifest.json build/
 
-          rsync -av icons build/
-          rsync -av src build/
-          rsync -av dist build/
+                  rsync -av icons build/
+                  rsync -av src build/
+                  rsync -av dist build/
 
-      # =====================================================
-      # CHROME
-      # =====================================================
+            # =====================================================
+            # CHROME
+            # =====================================================
 
-      - name: Generate CRX key
-        run: |
-          openssl genrsa -out key.pem 2048
+            - name: Generate CRX key
+              run: |
+                  openssl genrsa -out key.pem 2048
 
-      - name: Build Chrome CRX
-        run: |
-          crx3 package build --key key.pem --out extension-chrome.crx
+            - name: Build Chrome CRX
+              run: |
+                  crx3 package build --key key.pem
+                  mv build.crx extension-chrome.crx
+                  ls -la
 
-      # =====================================================
-      # EDGE
-      # =====================================================
+            # =====================================================
+            # EDGE
+            # =====================================================
 
-      - name: Build Edge ZIP
-        run: |
-          cd build
-          zip -r ../extension-edge.zip .
+            - name: Build Edge ZIP
+              run: |
+                  cd build
+                  zip -r ../extension-edge.zip .
 
-      # =====================================================
-      # FIREFOX
-      # =====================================================
+            # =====================================================
+            # FIREFOX
+            # =====================================================
 
-      - name: Prepare Firefox build
-        run: |
-          mkdir firefox
-          cp manifest_firefox.json firefox/manifest.json
+            - name: Prepare Firefox build
+              run: |
+                  mkdir firefox
+                  cp manifest_firefox.json firefox/manifest.json
 
-          rsync -av icons firefox/
-          rsync -av src firefox/
-          rsync -av dist firefox/
+                  rsync -av icons firefox/
+                  rsync -av src firefox/
+                  rsync -av dist firefox/
 
-      - name: Build Firefox XPI
-        run: |
-          cd firefox
-          zip -r ../extension-firefox.xpi .
+            - name: Build Firefox XPI
+              run: |
+                  cd firefox
+                  zip -r ../extension-firefox.xpi .
 
-      # =====================================================
-      # SOURCE ZIP
-      # =====================================================
+            # =====================================================
+            # GITHUB RELEASE
+            # =====================================================
 
-      - name: Build source archive
-        run: |
-          zip -r extension-source.zip . \
-            -x "*.git*" "*.github*" "node_modules/*" "build*" "firefox"
-
-      # =====================================================
-      # GITHUB RELEASE
-      # =====================================================
-
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          files: |
-            extension-chrome.crx
-            extension-edge.zip
-            extension-firefox.xpi
-            extension-source.zip
+            - name: Upload release assets
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: v${{ github.ref_name }}
+                  files: |
+                      extension-chrome.crx
+                      extension-edge.zip
+                      extension-firefox.xpi
+                      extension-source.zip
