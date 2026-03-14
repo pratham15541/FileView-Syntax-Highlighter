@@ -1,81 +1,113 @@
 name: Build Extension
 
 on:
-    push:
-        tags:
-            - "v*"
+  push:
+    tags:
+      - "v*"
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      # -------------------------
+      # Checkout repository
+      # -------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Install dependencies
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y jq zip
-                  npm install -g crx3
+      # -------------------------
+      # Install tools
+      # -------------------------
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq zip rsync
+          npm install -g crx3
 
-            - name: Read version from Chrome manifest
-              id: manifest
-              run: |
-                  VERSION=$(jq -r .version manifest.json)
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+      # -------------------------
+      # Read version from manifest
+      # -------------------------
+      - name: Read version from manifest
+        id: manifest
+        run: |
+          VERSION=$(jq -r .version manifest.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            # -------------------------
-            # Chrome / Edge build
-            # -------------------------
+      # -------------------------
+      # Debug structure (helps if CI fails)
+      # -------------------------
+      - name: Debug repository
+        run: |
+          echo "Repository structure:"
+          ls -la
 
-            - name: Build Chrome CRX
-              run: |
-                  echo "${{ secrets.CHROME_EXTENSION_KEY }}" > key.pem
-                  crx3 package . --key key.pem --out extension-chrome.crx
+      # =====================================================
+      # CHROME / EDGE BUILD
+      # =====================================================
 
-            - name: Build Edge CRX
-              run: |
-                  cp extension-chrome.crx extension-edge.crx
+      - name: Prepare Chrome build
+        run: |
+          mkdir chrome-build
+          rsync -av \
+            --exclude='.git*' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='*.zip' \
+            --exclude='*.crx' \
+            ./ chrome-build/
 
-            # -------------------------
-            # Firefox build
-            # -------------------------
+      - name: Build Chrome CRX
+        run: |
+          echo "${{ secrets.CHROME_EXTENSION_KEY }}" > key.pem
+          crx3 package chrome-build --key key.pem --out extension-chrome.crx
 
-            - name: Prepare Firefox manifest
-              run: |
-                  cp manifest.json manifest_chrome.json
-                  cp manifest_firefox.json manifest.json
+      - name: Build Edge CRX
+        run: |
+          cp extension-chrome.crx extension-edge.crx
 
-            - name: Build Firefox XPI
-              run: |
-                  zip -r extension-firefox.xpi . \
-                  -x "*.git*" "*.github*" "node_modules/*"
+      # =====================================================
+      # FIREFOX BUILD
+      # =====================================================
 
-            - name: Restore Chrome manifest
-              run: |
-                  cp manifest.json manifest_firefox.json
-                  cp manifest_chrome.json manifest.json
+      - name: Prepare Firefox build
+        run: |
+          mkdir firefox-build
+          rsync -av \
+            --exclude='.git*' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='*.zip' \
+            --exclude='*.crx' \
+            ./ firefox-build/
 
-            # -------------------------
-            # Source package
-            # -------------------------
+          # Replace manifest
+          cp manifest_firefox.json firefox-build/manifest.json
 
-            - name: Build source zip
-              run: |
-                  zip -r extension-source.zip . \
-                  -x "*.git*" "*.github*" "node_modules/*"
+      - name: Build Firefox XPI
+        run: |
+          cd firefox-build
+          zip -r ../extension-firefox.xpi .
 
-            # -------------------------
-            # Upload release
-            # -------------------------
+      # =====================================================
+      # SOURCE ZIP
+      # =====================================================
 
-            - name: Upload release assets
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: v${{ steps.manifest.outputs.version }}
-                  files: |
-                      extension-chrome.crx
-                      extension-edge.crx
-                      extension-firefox.xpi
-                      extension-source.zip
+      - name: Build source zip
+        run: |
+          zip -r extension-source.zip . \
+            -x "*.git*" "*.github*" "node_modules/*" "*.crx" "*.xpi"
+
+      # =====================================================
+      # GITHUB RELEASE
+      # =====================================================
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.manifest.outputs.version }}
+          files: |
+            extension-chrome.crx
+            extension-edge.crx
+            extension-firefox.xpi
+            extension-source.zip
