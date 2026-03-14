@@ -1,0 +1,98 @@
+{
+  "manifest_version": 2,
+  "name": "FileView — Syntax Highlighter",
+  "version": "1.0.0",
+  "description": "Instant syntax highlighting, prettify, and advanced Markdown preview for any file in Firefox. Supports 80+ languages.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "clipboardWrite",
+    "file:///*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "file:///*",
+        "https://*/*",
+        "http://*/*"
+      ],
+      "exclude_matches": [
+        "https://*.google.com/*",
+        "https://*.google.co.uk/*",
+        "https://*.google.com.au/*",
+        "https://*.google.ca/*",
+        "https://*.google.de/*",
+        "https://*.google.fr/*",
+        "https://*.google.co.jp/*",
+        "https://*.google.co.in/*",
+        "https://*.google.es/*",
+        "https://*.google.it/*",
+        "https://*.googleapis.com/*",
+        "https://*.googlesyndication.com/*",
+        "https://*.googletagmanager.com/*",
+        "https://*.bing.com/*",
+        "https://*.yahoo.com/*",
+        "https://*.duckduckgo.com/*",
+        "https://*.youtube.com/*",
+        "https://*.twitter.com/*",
+        "https://*.x.com/*",
+        "https://*.facebook.com/*",
+        "https://*.instagram.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.reddit.com/*",
+        "https://*.stackoverflow.com/*",
+        "https://github.com/*",
+        "https://*.github.com/*",
+        "https://gist.github.com/*",
+        "https://*.githubusercontent.com/*"
+      ],
+      "js": [
+        "dist/ace-bundle.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "browser_action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "FileView Settings"
+  },
+  "background": {
+    "scripts": [
+      "src/background/background.js"
+    ]
+  },
+  "options_ui": {
+    "page": "src/onboarding/onboarding.html",
+    "open_in_tab": true
+  },
+  "web_accessible_resources": [
+    "dist/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "fileview@ext",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ],
+        "description": "This extension does not collect or transmit any user data."
+      }
+    }
+  }
+}

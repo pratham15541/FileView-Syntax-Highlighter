@@ -1,0 +1,95 @@
+{
+  "manifest_version": 3,
+  "name": "FileView — Syntax Highlighter",
+  "version": "1.0.0",
+  "description": "Instant syntax highlighting, prettify, and Markdown preview for any file in Microsoft Edge. 80+ languages supported.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "file:///*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "file:///*",
+        "https://*/*",
+        "http://*/*"
+      ],
+      "exclude_matches": [
+        "https://*.google.com/*",
+        "https://*.google.co.uk/*",
+        "https://*.google.com.au/*",
+        "https://*.google.ca/*",
+        "https://*.google.de/*",
+        "https://*.google.fr/*",
+        "https://*.google.co.jp/*",
+        "https://*.google.co.in/*",
+        "https://*.google.es/*",
+        "https://*.google.it/*",
+        "https://*.googleapis.com/*",
+        "https://*.googlesyndication.com/*",
+        "https://*.googletagmanager.com/*",
+        "https://*.bing.com/*",
+        "https://*.yahoo.com/*",
+        "https://*.duckduckgo.com/*",
+        "https://*.youtube.com/*",
+        "https://*.twitter.com/*",
+        "https://*.x.com/*",
+        "https://*.facebook.com/*",
+        "https://*.instagram.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.reddit.com/*",
+        "https://*.stackoverflow.com/*",
+        "https://github.com/*",
+        "https://*.github.com/*"
+      ],
+      "js": [
+        "dist/ace-bundle.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "FileView Settings"
+  },
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dist/*",
+        "src/chatbot/*"
+      ],
+      "matches": [
+        "file:///*",
+        "https://*/*",
+        "http://*/*"
+      ]
+    }
+  ],
+  "options_page": "src/onboarding/onboarding.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https:;"
+  }
+}

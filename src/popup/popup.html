@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FileView</title>
+<style>
+  :root {
+    --bg: #161b22; --bg2: #21262d; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --brand: #6366f1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 300px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+  }
+  .header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+  }
+  .header-logo {
+    width: 24px; height: 24px; background: var(--brand);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-title { font-weight: 700; font-size: 14px; }
+  .header-sub { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .file-status {
+    padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  }
+  .file-status-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px;
+  }
+  .file-status-name {
+    font-weight: 600; font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-status-lang {
+    display: inline-block; margin-top: 4px; padding: 1px 8px;
+    background: rgba(99,102,241,0.2); color: #a5b4fc;
+    border: 1px solid rgba(99,102,241,0.27); border-radius: 20px;
+    font-size: 10px; font-weight: 700;
+  }
+  .not-active {
+    padding: 16px; color: var(--muted); font-size: 12px;
+    text-align: center; line-height: 1.5;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+  }
+  .section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .section-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px;
+  }
+  .row {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 8px;
+  }
+  .row:last-child { margin-bottom: 0; }
+  .row-label { color: var(--muted); font-size: 12px; }
+  select {
+    background: var(--bg2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 5px;
+    padding: 3px 8px; font-size: 12px; cursor: pointer; outline: none;
+    max-width: 160px;
+  }
+  select:hover { border-color: var(--brand); }
+  input[type=checkbox] { cursor: pointer; width: 16px; height: 16px; }
+  .link-row {
+    padding: 10px 16px; display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .link-btn {
+    background: none; border: none; color: #6366f1;
+    font-size: 12px; cursor: pointer; padding: 4px 0;
+  }
+  .link-btn:hover { text-decoration: underline; }
+  .divider { color: var(--border); }
+
+  /* ── Chatbot Toggle ── */
+  .toggle-switch {
+    position: relative; display: inline-block;
+    width: 36px; height: 20px;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #30363d; border-radius: 20px;
+    transition: 0.2s;
+  }
+  .toggle-slider:before {
+    position: absolute; content: "";
+    height: 14px; width: 14px; left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: 0.2s;
+  }
+  input:checked + .toggle-slider { background: #6366f1; }
+  input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+  /* ── AI Settings ── */
+  .ai-settings { display: none; }
+  .ai-settings.visible { display: block; }
+  .ai-input-group { margin-bottom: 8px; }
+  .ai-input-group:last-child { margin-bottom: 0; }
+  .ai-input-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; display: block; }
+  .ai-input {
+    width: 100%; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 5px;
+    padding: 5px 8px; font-size: 12px; outline: none; font-family: inherit;
+  }
+  .ai-input:focus { border-color: var(--brand); }
+  .ai-input::placeholder { color: var(--muted); opacity: 0.7; }
+  .ai-save-btn {
+    width: 100%; margin-top: 10px; padding: 6px;
+    background: var(--brand); color: white; border: none;
+    border-radius: 5px; font-size: 12px; cursor: pointer;
+    font-family: inherit; font-weight: 600;
+  }
+  .ai-save-btn:hover { background: #4f46e5; }
+  .ai-saved-msg { font-size: 11px; color: #22c55e; text-align: center; margin-top: 6px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <rect x="1" y="2.5" width="7" height="1.8" rx="0.9" fill="white" opacity="0.9"/>
+      <rect x="1" y="6" width="12" height="1.8" rx="0.9" fill="white"/>
+      <rect x="1" y="9.5" width="9" height="1.8" rx="0.9" fill="white" opacity="0.8"/>
+    </svg>
+  </div>
+  <span class="header-title">FileView</span>
+  <span class="header-sub">v2.0</span>
+</div>
+
+<div id="file-info-section"></div>
+
+<div class="section" id="settings-section" style="display:none">
+  <div class="section-label">Settings</div>
+  <div class="row">
+    <span class="row-label">Theme</span>
+    <select id="popup-theme"></select>
+  </div>
+  <div class="row">
+    <span class="row-label">Font size</span>
+    <select id="popup-fontsize">
+      <option value="10">10px</option>
+      <option value="11">11px</option>
+      <option value="12">12px</option>
+      <option value="13">13px</option>
+      <option value="14">14px</option>
+      <option value="15">15px</option>
+      <option value="16">16px</option>
+      <option value="18">18px</option>
+      <option value="20">20px</option>
+      <option value="22">22px</option>
+      <option value="24">24px</option>
+    </select>
+  </div>
+  <div class="row">
+    <span class="row-label">Word wrap</span>
+    <input type="checkbox" id="popup-wordwrap">
+  </div>
+</div>
+
+<!-- ── AI Chatbot Section ── -->
+<div class="section">
+  <div class="section-label">AI Chatbot</div>
+  <div class="row">
+    <span class="row-label">🤖 Enable chatbot</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="chatbot-toggle">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <div class="ai-settings" id="ai-settings">
+    <div class="ai-input-group">
+      <label class="ai-input-label">Base URL</label>
+      <input class="ai-input" id="ai-baseurl" type="text" placeholder="https://api.openai.com" />
+    </div>
+    <div class="ai-input-group">
+      <label class="ai-input-label">API Key</label>
+      <input class="ai-input" id="ai-apikey" type="password" placeholder="sk-..." />
+    </div>
+    <div class="ai-input-group">
+      <label class="ai-input-label">Model</label>
+      <input class="ai-input" id="ai-model" type="text" placeholder="gpt-4o-mini" />
+    </div>
+    <button class="ai-save-btn" id="ai-save-btn">Save Settings</button>
+    <div class="ai-saved-msg" id="ai-saved-msg">✓ Settings saved!</div>
+  </div>
+</div>
+
+<div class="link-row">
+  <button class="link-btn" id="setup-btn">Setup &amp; help</button>
+  <span class="divider">|</span>
+  <button class="link-btn" id="reload-btn">Reload tab</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

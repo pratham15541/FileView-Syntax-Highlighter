@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FileView — Setup</title>
+<style>
+  :root {
+    --brand: #6366f1;
+    --brand-light: #818cf8;
+    --bg: #0f0f1a;
+    --bg2: #1a1a2e;
+    --bg3: #16213e;
+    --border: #2d2d4a;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --success: #22c55e;
+    --step-size: 32px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 0;
+    text-align: center;
+  }
+  .logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .logo-icon {
+    width: 48px; height: 48px; background: var(--brand);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #a5b4fc, #6366f1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .tagline { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .container { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
+  .browser-tabs {
+    display: flex; gap: 6px; margin-bottom: 32px;
+    background: var(--bg2); padding: 6px; border-radius: 12px; border: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px; border: 1px solid transparent;
+    background: transparent; color: var(--muted); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--bg3); }
+  .tab-btn.active { background: var(--brand); color: white; }
+  .browser-panel { display: none; }
+  .browser-panel.active { display: block; }
+  .steps-title {
+    font-size: 18px; font-weight: 700; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .steps { display: flex; flex-direction: column; }
+  .step { display: flex; gap: 16px; position: relative; }
+  .step:not(:last-child)::after {
+    content: ''; position: absolute;
+    left: calc(var(--step-size) / 2 - 1px); top: var(--step-size); bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .step-num {
+    width: var(--step-size); height: var(--step-size); border-radius: 50%;
+    background: var(--brand); color: white; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; z-index: 1;
+  }
+  .step-body { padding-bottom: 28px; flex: 1; padding-top: 6px; }
+  .step-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .step-desc { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .step-desc strong { color: var(--text); }
+  .url-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 12px; font-size: 12px;
+    font-family: 'Consolas', 'Monaco', monospace; color: #a5b4fc;
+    margin: 6px 0; cursor: pointer; transition: all 0.15s;
+  }
+  .url-chip:hover { border-color: var(--brand); background: rgba(99,102,241,0.1); }
+  .toggle-illus {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; margin-top: 10px;
+    font-size: 13px; color: var(--muted);
+  }
+  .toggle-track {
+    position: relative; width: 44px; height: 24px;
+    background: var(--success); border-radius: 12px; flex-shrink: 0;
+  }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 22px;
+    width: 18px; height: 18px; background: white; border-radius: 50%;
+  }
+  .note {
+    display: flex; gap: 12px; background: rgba(124,45,18,0.1);
+    border: 1px solid #7c2d12; border-radius: 8px; padding: 14px 16px;
+    margin-top: 28px; font-size: 13px; line-height: 1.6; color: #fed7aa;
+  }
+  .note-icon { font-size: 18px; flex-shrink: 0; }
+  .note strong { color: #fb923c; }
+  .info-box {
+    display: flex; gap: 12px; background: rgba(30,58,95,0.2);
+    border: 1px solid #1e40af; border-radius: 8px; padding: 14px 16px;
+    margin-top: 16px; font-size: 13px; line-height: 1.6; color: #93c5fd;
+  }
+  .safari-note {
+    background: var(--bg2); border: 1px solid #854d0e;
+    border-radius: 10px; padding: 20px; color: #fef08a;
+    font-size: 13px; line-height: 1.7;
+  }
+  .safari-note h3 { color: #fde68a; font-size: 15px; margin-bottom: 10px; }
+  .safari-note ol { margin-left: 18px; margin-top: 8px; line-height: 2; }
+  .safari-note code { background: #1c1c1e; padding: 2px 8px; border-radius: 4px; }
+  .test-section {
+    margin-top: 36px; text-align: center; padding: 32px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .test-section h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .test-section p { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; background: var(--brand); color: white;
+    border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 36px; }
+  .feature-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  .feature-icon { font-size: 22px; margin-bottom: 8px; }
+  .feature-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .feature-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  h2 {
+    font-size: 22px; font-weight: 800; margin-bottom: 6px;
+    background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .section-intro { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  #detected-banner {
+    background: rgba(99,102,241,0.1); border: 1px solid var(--brand);
+    border-radius: 8px; padding: 10px 16px; font-size: 13px;
+    color: #a5b4fc; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .pulse-dot {
+    width: 8px; height: 8px; background: var(--brand-light);
+    border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  code.inline {
+    background: rgba(30,41,59,0.9); padding: 2px 6px;
+    border-radius: 4px; font-size: 12px; font-family: monospace; color: #a5b4fc;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect x="3" y="6" width="14" height="2.5" rx="1.25" fill="white" opacity="0.9"/>
+        <rect x="3" y="11" width="22" height="2.5" rx="1.25" fill="white"/>
+        <rect x="3" y="16" width="18" height="2.5" rx="1.25" fill="white" opacity="0.85"/>
+        <rect x="3" y="21" width="12" height="2.5" rx="1.25" fill="white" opacity="0.6"/>
+      </svg>
+    </div>
+    <span class="logo-text">FileView</span>
+  </div>
+  <div class="tagline">Instant syntax highlighting for any file you open in your browser</div>
+</div>
+
+<div class="container">
+
+  <div id="detected-banner">
+    <div class="pulse-dot"></div>
+    <span id="detected-text">Detecting your browser...</span>
+  </div>
+
+  <h2>One-time setup</h2>
+  <p class="section-intro">FileView needs permission to access local files. Browser security requirement — takes 30 seconds.</p>
+
+  <div class="browser-tabs">
+    <button class="tab-btn" data-browser="chrome">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#4285F4"/><circle cx="12" cy="12" r="4" fill="white"/><path d="M12 2h10" stroke="#EA4335" stroke-width="2.5"/><path d="M2.05 7h9.95" stroke="#FBBC04" stroke-width="2.5"/><path d="M2.05 17h9.95" stroke="#34A853" stroke-width="2.5"/></svg>
+      Chrome
+    </button>
+    <button class="tab-btn" data-browser="edge">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0078D4"/><path d="M7 16c1-4 5-7 9-5" stroke="white" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="15" rx="5" ry="3" fill="white" opacity="0.9"/></svg>
+      Edge
+    </button>
+    <button class="tab-btn" data-browser="firefox">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FF6611"/><circle cx="12" cy="12" r="6" fill="#FF9500" opacity="0.7"/><circle cx="12" cy="12" r="3" fill="#FF6611"/></svg>
+      Firefox
+    </button>
+    <button class="tab-btn" data-browser="safari">
+      <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#006CFF"/><line x1="12" y1="4" x2="12" y2="20" stroke="white" stroke-width="1" opacity="0.4"/><line x1="4" y1="12" x2="20" y2="12" stroke="white" stroke-width="1" opacity="0.4"/><polygon points="12,6 14.5,14 12,13 9.5,14" fill="white"/></svg>
+      Safari
+    </button>
+  </div>
+
+  <!-- Chrome -->
+  <div class="browser-panel" id="panel-chrome">
+    <div class="steps-title">
+      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#4285F4"/><circle cx="12" cy="12" r="4" fill="white"/></svg>
+      Chrome Setup
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Open Chrome Extensions</div>
+          <div class="step-desc">
+            Type in the address bar (click to copy):
+            <div class="url-chip" data-url="chrome://extensions">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="9" rx="1"/><path d="M3 11V3h8"/></svg>
+              chrome://extensions
+            </div>
+            Or: ☰ Menu → More Tools → Extensions
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Find FileView → click Details</div>
+          <div class="step-desc">Scroll to <strong>FileView — Syntax Highlighter</strong> and click <strong>Details</strong>.</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Enable "Allow access to file URLs"</div>
+          <div class="step-desc">
+            Turn on this toggle on the details page:
+            <div class="toggle-illus">
+              <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              <span>Allow access to file URLs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Open any local file</div>
+          <div class="step-desc">Drag a file onto Chrome or press <strong>Ctrl+O</strong>. Done — highlighting is automatic.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <div class="note-icon">⚠</div>
+      <div><strong>Why is this required?</strong> Chrome blocks extensions from local files by default for security. FileView only reads — never modifies or uploads your files.</div>
+    </div>
+  </div>
+
+  <!-- Edge -->
+  <div class="browser-panel" id="panel-edge">
+    <div class="steps-title">
+      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0078D4"/></svg>
+      Microsoft Edge Setup
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Open Edge Extensions</div>
+          <div class="step-desc">
+            <div class="url-chip" data-url="edge://extensions">edge://extensions</div>
+            Or: ☰ Menu → Extensions → Manage Extensions
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Click Details for FileView</div>
+          <div class="step-desc">Find <strong>FileView — Syntax Highlighter</strong> and click <strong>Details</strong>.</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Enable "Allow access to file URLs"</div>
+          <div class="step-desc">
+            <div class="toggle-illus">
+              <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              <span>Allow access to file URLs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Open any local file</div>
+          <div class="step-desc">Drag a file onto Edge or press <strong>Ctrl+O</strong>.</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      <span>ℹ</span>
+      <span>Edge is Chromium-based — steps are identical to Chrome, only the URL differs.</span>
+    </div>
+  </div>
+
+  <!-- Firefox -->
+  <div class="browser-panel" id="panel-firefox">
+    <div class="steps-title">
+      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FF6611"/></svg>
+      Firefox Setup
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Use the Firefox manifest</div>
+          <div class="step-desc">Rename <code class="inline">manifest_firefox.json</code> → <code class="inline">manifest.json</code> in the extension folder.</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Load as temporary add-on</div>
+          <div class="step-desc">
+            <div class="url-chip" data-url="about:debugging">about:debugging</div>
+            Click <strong>This Firefox</strong> → <strong>Load Temporary Add-on</strong> → select <code class="inline">manifest.json</code>
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Fix file:// access if needed</div>
+          <div class="step-desc">
+            If files still don't highlight:
+            <div class="url-chip" data-url="about:config">about:config</div>
+            Find <code class="inline">privacy.file_unique_origin</code> → set to <strong>false</strong>
+          </div>
+        </div>
+      </div>
+      <div class="step"><div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Open any local file</div>
+          <div class="step-desc">Press <strong>Ctrl+O</strong> or drag a file onto Firefox.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <div class="note-icon">⚠</div>
+      <div><strong>Note:</strong> Temporary add-ons are removed on Firefox restart. For permanent install, the extension needs to be signed via <strong>addons.mozilla.org</strong>.</div>
+    </div>
+  </div>
+
+  <!-- Safari -->
+  <div class="browser-panel" id="panel-safari">
+    <div class="steps-title">
+      <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#006CFF"/></svg>
+      Safari Setup
+    </div>
+    <div class="safari-note">
+      <h3>⚠ Safari requires Xcode conversion</h3>
+      <p>Safari Web Extensions are macOS-only and need to be built via Xcode.</p>
+      <br>
+      <ol>
+        <li>Install Xcode from the Mac App Store</li>
+        <li>Run: <code>xcrun safari-web-extension-converter /path/to/file-viewer-ext</code></li>
+        <li>Open the Xcode project → Build (⌘B)</li>
+        <li>Safari → Settings → Extensions → Enable FileView</li>
+        <li>Websites tab → allow file:// URL access</li>
+      </ol>
+      <br>
+      <p style="color:#a3a3a3;font-size:12px">Tip: Chrome or Edge on macOS is much easier to set up.</p>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🎨</div>
+      <div class="feature-title">48 Themes</div>
+      <div class="feature-desc">Monokai, Dracula, Nord Dark, One Dark, Gruvbox, GitHub Dark, Solarized, Tomorrow Night, and 39 more.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📂</div>
+      <div class="feature-title">Code Folding</div>
+      <div class="feature-desc">Click gutter arrows to fold any block. Fold All / Unfold buttons in the toolbar.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <div class="feature-title">Search (Ctrl+F)</div>
+      <div class="feature-desc">Built-in search panel with regex, case sensitivity, and live match count.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <div class="feature-title">195 Languages</div>
+      <div class="feature-desc">JS/TS, Python, Rust, Go, Zig, Svelte, Prisma, Terraform, and every other language Ace supports.</div>
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h3>All set? Try it now</h3>
+    <p>Pick any local code file to open it highlighted in a new tab.</p>
+    <button class="btn-primary" id="test-file-btn">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M4 6l4 4 4-4"/><rect x="2" y="11" width="12" height="3" rx="1"/></svg>
+      Open a local file
+    </button>
+  </div>
+
+</div>
+
+<script src="onboarding.js"></script>
+</body>
+</html>
