@@ -98,7 +98,7 @@ jobs:
             - name: Upload release assets
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: v${{ github.ref_name }}
+                  tag_name: ${{ github.ref_name }}
                   files: |
                       extension-chrome.crx
                       extension-edge.zip
