@@ -13,33 +13,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -------------------------
+      # -------------------------------------------------
       # Checkout repository
-      # -------------------------
+      # -------------------------------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -------------------------
-      # Install dependencies
-      # -------------------------
-      - name: Install tools
+      # -------------------------------------------------
+      # Install tools
+      # -------------------------------------------------
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq zip rsync openssl
           npm install -g crx3
 
-      # -------------------------
-      # Read version
-      # -------------------------
-      - name: Read version
-        id: version
+      # -------------------------------------------------
+      # Read extension version
+      # -------------------------------------------------
+      - name: Read version from manifest
+        id: manifest
         run: |
           VERSION=$(jq -r .version manifest.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # =====================================================
-      # CHROME BUILD
-      # =====================================================
+      # =================================================
+      # CHROME / EDGE BUILD
+      # =================================================
 
       - name: Prepare Chrome build
         run: |
@@ -49,10 +49,9 @@ jobs:
 
           rsync -av icons build-chrome/
           rsync -av src build-chrome/
-          rsync -av vendor build-chrome/
+          rsync -av dist build-chrome/
 
-      # Generate key automatically
-      - name: Generate CRX key
+      - name: Generate CRX signing key
         run: |
           openssl genrsa -out key.pem 2048
 
@@ -64,9 +63,9 @@ jobs:
         run: |
           cp extension-chrome.crx extension-edge.crx
 
-      # =====================================================
+      # =================================================
       # FIREFOX BUILD
-      # =====================================================
+      # =================================================
 
       - name: Prepare Firefox build
         run: |
@@ -76,30 +75,33 @@ jobs:
 
           rsync -av icons build-firefox/
           rsync -av src build-firefox/
-          rsync -av vendor build-firefox/
+          rsync -av dist build-firefox/
 
       - name: Build Firefox XPI
         run: |
           cd build-firefox
           zip -r ../extension-firefox.xpi .
 
-      # =====================================================
+      # =================================================
       # SOURCE ZIP
-      # =====================================================
+      # =================================================
 
       - name: Build source archive
         run: |
           zip -r extension-source.zip . \
-            -x "*.git*" "*.github*" "node_modules/*"
+            -x "*.git*" \
+               "*.github*" \
+               "node_modules/*" \
+               "build-*"
 
-      # =====================================================
-      # RELEASE
-      # =====================================================
+      # =================================================
+      # CREATE GITHUB RELEASE
+      # =================================================
 
-      - name: Upload Release
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.manifest.outputs.version }}
           files: |
             extension-chrome.crx
             extension-edge.crx
