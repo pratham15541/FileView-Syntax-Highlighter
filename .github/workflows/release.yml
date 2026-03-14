@@ -61,7 +61,7 @@ jobs:
             - name: Build Chrome CRX
               run: |
                   crx3 package build --key key.pem
-                  mv build.crx extension-chrome.crx
+                  mv *.crx extension-chrome.crx
                   ls -la
 
             # =====================================================
