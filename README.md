@@ -50,26 +50,39 @@ JS/TS/JSX/TSX · HTML/CSS/SCSS · Python · Java · Rust · Go · C/C++ · C# ·
 ## File Structure
 
 ```
-file-viewer-ext/
-├── manifest.json              Chrome/Edge (MV3)
-├── manifest_firefox.json      Firefox (MV2)
-├── icons/                     Extension icons
-├── src/
-│   ├── content/
-│   │   ├── content.js         Main content script (mounts Ace)
-│   │   └── content.css        Layout + toolbar styles
-│   ├── popup/
-│   │   └── popup.html         Toolbar popup (theme/settings)
-│   ├── onboarding/
-│   │   └── onboarding.html    Setup guide (auto-detects browser)
-│   └── background/
-│       └── background.js      Opens onboarding on first install
-└── vendor/ace/                Ace editor (bundled, no CDN)
-    ├── ace.js
-    ├── ext-modelist.js
-    ├── ext-searchbox.js
-    ├── theme-*.js             9 themes
-    └── mode-*.js              35 language modes
+FileView-Syntax-Highlighter/
+├── .github/
+│   └── workflows/
+│       └── release.yml
+├── assets/
+│   ├── 1.png
+│   ├── 2.png
+│   ├── 3.png
+│   └── 4.png
+├── dist/
+│   └── ace-bundle.js
+├── icons/
+│   ├── icon128.png
+│   ├── icon16.png
+│   └── icon48.png
+├── LICENSE
+├── manifest_firefox.json
+├── manifest.json
+├── README.md
+└── src/
+    ├── ace-bundle-entry.js
+    ├── background/
+    │   └── background.js
+    ├── content/
+    │   ├── content.css
+    │   └── content.js
+    ├── onboarding/
+    │   ├── onboarding.html
+    │   └── onboarding.js
+    └── popup/
+        ├── popup.html
+        └── popup.js
+
 ```
 
 ## Known Limitations (Phase 2+)
