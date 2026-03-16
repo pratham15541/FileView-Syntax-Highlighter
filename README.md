@@ -77,4 +77,4 @@ file-viewer-ext/
 - **No file editing** — Chrome extensions can't write to disk directly. Phase 3 will add Native Messaging for save support.
 - **Git diff view** — planned for Phase 2
 
-![alt text](assets/2.png) ![alt text](assets/3.png) ![alt text](assets/4.png) ![alt text](assets/1.png)
+![alt text](assets/5.png) ![alt text](assets/3.png) ![alt text](assets/4.png) ![alt text](assets/1.png)
