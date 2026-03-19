@@ -2,6 +2,8 @@
 
 Instant syntax highlighting, code folding, and theme switching for any file you open in Chrome, Edge, or Firefox.
 
+### Download on Edge using:- 
+https://microsoftedge.microsoft.com/addons/detail/fileview-%E2%80%94-syntax-highlig/kpkhgfkppleimialngibfnehhifijlnm
 ## Quick Start
 
 ### Chrome / Edge
